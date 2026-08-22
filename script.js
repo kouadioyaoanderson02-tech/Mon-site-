@@ -1,40 +1,77 @@
-// Navbar active link on scroll
-const sections = document.querySelectorAll('section');
-const navLinks = document.querySelectorAll('nav ul a');
+(function() {
+  'use strict';
 
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(s => {
-    if (window.scrollY >= s.offsetTop - 80) current = s.getAttribute('id');
+  // ============================================
+  // 1. NAV ACTIVE LINK ON SCROLL
+  // ============================================
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav ul a');
+
+  function updateActiveLink() {
+    let current = '';
+    const scrollY = window.scrollY + 100;
+
+    sections.forEach(s => {
+      const top = s.offsetTop;
+      const height = s.offsetHeight;
+      if (scrollY >= top && scrollY < top + height) {
+        current = s.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(a => {
+      a.style.color = '';
+      a.style.borderBottomColor = 'transparent';
+      if (a.getAttribute('href') === '#' + current) {
+        a.style.color = 'var(--accent)';
+        a.style.borderBottomColor = 'var(--accent)';
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink);
+  window.addEventListener('load', updateActiveLink);
+
+  // ============================================
+  // 2. SCROLL REVEAL (Intersection Observer)
+  // ============================================
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { 
+    threshold: 0.12, 
+    rootMargin: '0px 0px -20px 0px' 
   });
-  navLinks.forEach(a => {
-    a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--accent)' : '';
+
+  document.querySelectorAll('.skill-card, .project-card, .contact-item').forEach(el => {
+    observer.observe(el);
   });
-});
 
-// Smooth reveal on scroll
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) e.target.classList.add('visible');
-  });
-}, { threshold: 0.1 });
+  // ============================================
+  // 3. CONTACT FORM
+  // ============================================
+  const form = document.getElementById('contactForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('✅ Message envoyé ! Je vous répondrai bientôt. 🚀');
+      this.reset();
+    });
+  }
 
-document.querySelectorAll('.skill-card, .project-card, .contact-item').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(30px)';
-  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-  observer.observe(el);
-});
+  // ============================================
+  // 4. FIX: visible class for elements already in view
+  // ============================================
+  setTimeout(() => {
+    document.querySelectorAll('.skill-card, .project-card, .contact-item').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight) {
+        el.classList.add('visible');
+      }
+    });
+  }, 200);
 
-document.addEventListener('DOMContentLoaded', () => {
-  const style = document.createElement('style');
-  style.textContent = '.visible { opacity: 1 !important; transform: translateY(0) !important; }';
-  document.head.appendChild(style);
-});
-
-// Contact form
-document.querySelector('.contact-form').addEventListener('submit', e => {
-  e.preventDefault();
-  alert('Message envoyé ! Je vous répondrai bientôt. 🚀');
-  e.target.reset();
-});
+})();
